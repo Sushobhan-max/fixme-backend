@@ -51,7 +51,7 @@ export const verifySignUp = async (req: Request, res: Response) => {
         await Otp.deleteOne({ _id: isOtpInDB._id });
         res.status(200).json({ message: "Email verified successfully" });
     } catch (error: unknown) {
-        if (error instanceof Error) {
+        if (error instanceof Error) {   
             res.status(500).json({ message: error.message })
         }
         else {
