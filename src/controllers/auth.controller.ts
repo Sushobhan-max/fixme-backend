@@ -15,6 +15,8 @@ export const signUp = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "User already exists" });
         }
         if (userExists && !userExists.isVerified) {
+            const hashedPassword = await bcrypt.hash(password, 12);
+            await User.updateOne({ email }, { firstName, lastName, password: hashedPassword })
             await Otp.deleteMany({ email, purpose: "signup" });
             const otp = generateOtp();
             await Otp.create({ email, otp, purpose: "signup" });
@@ -44,14 +46,14 @@ export const verifySignUp = async (req: Request, res: Response) => {
 
         const isOtpInDB = await Otp.findOne({ email, otp, purpose: "signup" });
         if (!isOtpInDB) {
-            return res.status(400).json({ message: "OTP not found or expired" })
+            return res.status(400).json({ message: "OTP expired" })
         }
 
         await User.updateOne({ email }, { isVerified: true });
         await Otp.deleteOne({ _id: isOtpInDB._id });
         res.status(200).json({ message: "Email verified successfully" });
     } catch (error: unknown) {
-        if (error instanceof Error) {   
+        if (error instanceof Error) {
             res.status(500).json({ message: error.message })
         }
         else {
